@@ -17,6 +17,17 @@ def computing_w(F,t,lam=0):
     return nalg.inv((F.transpose().dot(F))+lam*I).dot(F.transpose()).dot(t)
 
 
+def find_min_error(x,t, n, lams):
+    errors=np.zeros((n,lams))
+    for i in range(n):
+        for lam in range(lams):
+            F=computing_F(x, n)
+            w=computing_w(F,t, lam)
+            new_y=F.dot(w)
+            errors[i,lam]=np.sum((new_y - t) ** 2)
+    find=np.where(errors == np.min(errors))
+    print np.min(errors), np.where(errors==np.min(errors))
+    return find[0], find[1]
 
 
 
@@ -25,27 +36,18 @@ def main():
     y = 20 * np.sin(2 * np.pi * 3 * x) + 100 * np.exp(x)
     e = 10 * np.random.randn(1000)
     t = y + e
-    k = 1
-    e_count=10
-    errors=np.zeros((e_count-1))
-    for e in range(1, e_count):
-        F = computing_F(x, e)
-        w=computing_w(F,t,13)
-        new_y = F.dot(w)
-        errors[e-1] = np.sum((new_y - t) ** 2)
-        # print(np.where(errors == np.min(errors)))
-        print errors[e-1]
-    i=np.where(errors==np.min(errors))
-    print np.min(errors), i
-    index=i[0][0]
-    F = computing_F(x, index)
-    w = computing_w(F, t, 0)
-    new_y = F.dot(w)
     plt.figure()
-    #plt.plot(np.arange(k), errors, 'g')
     plt.plot(x,t, '.g')
     plt.plot(x,y,'r')
-    plt.plot(x,new_y,'b')
+    n,lams=find_min_error(x,t,20, 5)
+    for i in range(n.size):
+        F = computing_F(x, n[i])
+        w = computing_w(F, t, lams[i])
+        new_y = F.dot(w)
+
+    #plt.plot(np.arange(k), errors, 'g')
+
+        plt.plot(x,new_y,color=(0.8,0.8, float(i)/n.size))
     plt.show()
 
 if __name__=="__main__":
