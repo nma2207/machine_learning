@@ -25,7 +25,17 @@ def computing_y(w,x):
         y+=w[i]*(x**i)
     return y
 
-def find_min_error(x,t, n, lams):
+def calculate_y(x):
+    return  20 * np.sin(2 * np.pi * 3 * x) + 100 * np.exp(x)
+
+def calculate_t(x):
+    y=calculate_y(x)
+    e = 10 * np.random.randn(1000)
+    t = y + e
+    return t
+
+def find_min_error(training_x, training_set, valid_x, valid_set, test_x, test_set):
+    #все это надо переделать, но мне пока лень
     errors=np.zeros((n,lams))
     for i in range(n):
         for lam in range(lams):
@@ -48,13 +58,28 @@ def find_min_error(x,t, n, lams):
 
 
 def main():
+    #Original
     x = np.linspace(0, 1, 1000)
-    y = 20 * np.sin(2 * np.pi * 3 * x) + 100 * np.exp(x)
-    e = 10 * np.random.randn(1000)
-    t = y + e
+    y = calculate_y(x)
+
+    # обучающая выборка
+    training_x = np.random.uniform(0, 1, 1000)
+    training_set = calculate_t(training_x)
+
+    #валидационная выборка
+    valid_x=np.random.uniform(0,1,200)
+    valid_set = calculate_t(valid_x)
+
+    test_x=np.random.uniform(0,1,200)
+    test__set=calculate_t(test_x)
+
+
+
+
     plt.figure()
-    plt.plot(x,t, '.g')
-    plt.plot(x,y,'r')
+    plt.plot(x, y, 'r')
+    plt.plot(training_x,training_set, '.g')
+
 
     n,lams=find_min_error(x,t,30, 10)
     #на случай, если таких будет несколько
@@ -65,7 +90,7 @@ def main():
 
     #plt.plot(np.arange(k), errors, 'g')
 
-        plt.plot(x,new_y,color=(float(i)/n.size,0.,1. ))
+    plt.plot(x,new_y,color=(float(i)/n.size,0.,1. ))
     plt.show()
 
 if __name__=="__main__":
