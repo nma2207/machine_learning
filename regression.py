@@ -42,7 +42,7 @@ def find_min_error(training_x, training_set, valid_x, valid_set, exp_count):
     for i in range(exp_count):
         n=i+1
         lam=0
-        lam=np.random.uniform(0,100,1)
+        #lam=np.random.uniform(0,100,1)
         F = computing_F(training_x, n)
         w = computing_w(F, training_set, lam)
         train_y=computing_y(w,training_x)
