@@ -40,10 +40,11 @@ def find_min_error(training_x, training_set, valid_x, valid_set, exp_count):
     errors=np.zeros((exp_count))
     data=np.zeros((exp_count, 2))
     for i in range(exp_count):
-        n=int(np.random.uniform(1,100,1))
-        lam=np.random.uniform(-50,50,1)
+        n=i+1
+        lam=0
+        lam=np.random.uniform(0,100,1)
         F = computing_F(training_x, n)
-        w = computing_w(F, training_x, lam)
+        w = computing_w(F, training_set, lam)
         train_y=computing_y(w,training_x)
         valid_y=computing_y(w, valid_x)
         train_errors[i]=np.sum((train_y-training_set)**2)
@@ -57,11 +58,13 @@ def find_min_error(training_x, training_set, valid_x, valid_set, exp_count):
     plt.show()
     find=np.where(errors == np.min(errors))
     index=find[0][0]
-    n=data[index][0]
+    n=int(data[index][0])
     lam=data[index][1]
     print data[index]
+    print errors[index]
     F = computing_F(training_x, n)
-    w = computing_w(F, training_x, lam)
+    w = computing_w(F, training_set, lam)
+    print w
     return w
 
 
@@ -80,9 +83,9 @@ def main():
     valid_set = calculate_t(valid_x)
 
     test_x=np.random.uniform(0,1,200)
-    test__set=calculate_t(test_x)
+    test_set=calculate_t(test_x)
 
-    w = find_min_error(training_x, training_set, valid_x, valid_set, 1000)
+    w = find_min_error(training_x, training_set, valid_x, valid_set, 200)
 
     new_x=np.linspace(0,1,500)
     new_y=computing_y(w,new_x)
@@ -90,7 +93,7 @@ def main():
     plt.figure()
     plt.plot(x, y, 'r')
     plt.plot(training_x,training_set, '.g')
-    plt.plot(new_x, new_y, 'g')
+    plt.plot(new_x, new_y, 'b')
     plt.show()
 
 
