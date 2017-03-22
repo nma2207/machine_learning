@@ -19,7 +19,7 @@ def computing_w(F,t,lam=0):
     I=np.identity(F.shape[1])
     return nalg.inv((F.transpose().dot(F))+lam*I).dot(F.transpose()).dot(t)
 
-def computing_y(w,x):
+def computing_new_y(w,x):
     y=np.zeros((x.size), dtype=float)
     for i in range(w.size):
         y+=w[i]*(x**i)
@@ -40,33 +40,37 @@ def find_min_error(training_x, training_set, valid_x, valid_set, exp_count):
     errors=np.zeros((exp_count))
     data=np.zeros((exp_count, 2))
     for i in range(exp_count):
-        n=i+1
-        lam=0
-        #lam=np.random.uniform(0,100,1)
+
+        print float(i+1)/exp_count*100,' %'
+        #n=i+1
+        n=i+1;
+        #можно по-хитрому выщитывать лябда, но я решил, что при 0 - лучший вариант
+        lam=0#0np.random.uniform(0,100,1)
         F = computing_F(training_x, n)
         w = computing_w(F, training_set, lam)
-        train_y=computing_y(w,training_x)
-        valid_y=computing_y(w, valid_x)
-        train_errors[i]=np.sum((train_y-training_set)**2)
-        errors[i]=np.sum((valid_y-valid_set)**2)
+        train_y=computing_new_y(w,training_x)
+        valid_y=computing_new_y(w, valid_x)
+        train_errors[i]=error(training_set, train_y)
+        errors[i]=error(valid_set, valid_y)
         data[i][0]=n
         data[i][1]=lam
     plt.figure()
-    print data[:,0]
     plt.plot(data[:,0], train_errors,'g')
     plt.plot(data[:, 0], errors, 'b')
+    plt.title('Error')
     plt.show()
     find=np.where(errors == np.min(errors))
     index=find[0][0]
     n=int(data[index][0])
     lam=data[index][1]
-    print data[index]
-    print errors[index]
     F = computing_F(training_x, n)
     w = computing_w(F, training_set, lam)
-    print w
+    print 'n=',n
+    #print w
     return w
 
+def error(x,y):
+    return np.sum((x-y)**2)
 
 
 def main():
@@ -85,14 +89,22 @@ def main():
     test_x=np.random.uniform(0,1,200)
     test_set=calculate_t(test_x)
 
-    w = find_min_error(training_x, training_set, valid_x, valid_set, 200)
+    w = find_min_error(training_x, training_set, valid_x, valid_set,20)
 
+    training_new_y=computing_new_y(w, training_x)
+    valid_new_y=computing_new_y(w, valid_x)
+    test_new_y=computing_new_y(w, test_x)
+
+    print 'Training-error: ', error(training_set, training_new_y)
+    print 'Valid-error:    ', error(valid_set, valid_new_y)
+    print 'Test-error:     ', error(test_new_y, test_set)
     new_x=np.linspace(0,1,500)
-    new_y=computing_y(w,new_x)
+    new_y=computing_new_y(w,new_x)
 
     plt.figure()
+    plt.plot(training_x, training_set, '.g')
     plt.plot(x, y, 'r')
-    plt.plot(training_x,training_set, '.g')
+
     plt.plot(new_x, new_y, 'b')
     plt.show()
 
