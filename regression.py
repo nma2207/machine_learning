@@ -34,26 +34,29 @@ def calculate_t(x):
     t = y + e
     return t
 
-def find_min_error(training_x, training_set, valid_x, valid_set, exp_count):
+def find_min_error(training_x, training_set, valid_x, valid_set, ns, lams=np.zeros((1))):
     #все это надо переделать, но мне пока лень
+    exp_count=ns.size*lams.size
     train_errors=np.zeros((exp_count))
     errors=np.zeros((exp_count))
     data=np.zeros((exp_count, 2))
-    for i in range(exp_count):
-
-        print float(i+1)/exp_count*100,' %'
-        #n=i+1
-        n=i+1;
-        #можно по-хитрому выщитывать лябда, но я решил, что при 0 - лучший вариант
-        lam=0#0np.random.uniform(0,100,1)
-        F = computing_F(training_x, n)
-        w = computing_w(F, training_set, lam)
-        train_y=computing_new_y(w,training_x)
-        valid_y=computing_new_y(w, valid_x)
-        train_errors[i]=error(training_set, train_y)
-        errors[i]=error(valid_set, valid_y)
-        data[i][0]=n
-        data[i][1]=lam
+    i=0
+    for n in ns:
+        for lam in lams:
+    
+            #n=i+1
+            #n=i;
+            #можно по-хитрому выщитывать лябда, но я решил, что при 0 - лучший вариант
+            #lam=0#0np.random.uniform(0,100,1)
+            F = computing_F(training_x, n)
+            w = computing_w(F, training_set, lam)
+            train_y=computing_new_y(w,training_x)
+            valid_y=computing_new_y(w, valid_x)
+            train_errors[i]=error(training_set, train_y,w,lam)
+            errors[i]=error(valid_set, valid_y,w,lam)
+            data[i][0]=n
+            data[i][1]=lam
+            i+=1
     plt.figure()
     plt.plot(data[:,0], train_errors,'g')
     plt.plot(data[:, 0], errors, 'b')
@@ -65,47 +68,52 @@ def find_min_error(training_x, training_set, valid_x, valid_set, exp_count):
     lam=data[index][1]
     F = computing_F(training_x, n)
     w = computing_w(F, training_set, lam)
-    print 'n=',n
+    print( 'n=',n)
+    print( 'lambda=',lam)
     #print w
-    return w
+    return w, lam
 
-def error(x,y):
-    return np.sum((x-y)**2)
+def error(x,y,w,lam,q=2):
+    return (1/2.)*np.sum((x-y)**2)+(lam/2.)*np.sum(np.abs(w)**q)
 
 
 def main():
     #Original
-    x = np.linspace(0, 1, 1000)
+    x = np.linspace(0, 1, 2000)
     y = calculate_y(x)
+    t=calculate_t(x)
+    ar=np.arange(2000)
+    np.random.shuffle(ar)
 
     # обучающая выборка
-    training_x = np.random.uniform(0, 1, 1000)
-    training_set = calculate_t(training_x)
+    training_x = x[ar[:1200]]
+    training_set =  t[ar[:1200]]
 
     #валидационная выборка
-    valid_x=np.random.uniform(0,1,200)
-    valid_set = calculate_t(valid_x)
+    valid_x=x[ar[1200:1600]]
+    valid_set = t[ar[1200:1600]]
 
-    test_x=np.random.uniform(0,1,200)
-    test_set=calculate_t(test_x)
-
-    w = find_min_error(training_x, training_set, valid_x, valid_set,20)
+    test_x=x[ar[1600:2000]]
+    test_set=x[ar[1600:2000]]
+    n=np.arange(30,100)
+    lam=np.linspace(0,100,150)
+    w,l = find_min_error(training_x, training_set, valid_x, valid_set,n, lam)
 
     training_new_y=computing_new_y(w, training_x)
     valid_new_y=computing_new_y(w, valid_x)
     test_new_y=computing_new_y(w, test_x)
 
-    print 'Training-error: ', error(training_set, training_new_y)
-    print 'Valid-error:    ', error(valid_set, valid_new_y)
-    print 'Test-error:     ', error(test_new_y, test_set)
+    print ('Training-error: ', error(training_set, training_new_y,w,l))
+    print ('Valid-error:    ', error(valid_set, valid_new_y,w,l))
+    print ('Test-error:     ', error(test_new_y, test_set,w,l))
     new_x=np.linspace(0,1,500)
     new_y=computing_new_y(w,new_x)
 
     plt.figure()
     plt.plot(training_x, training_set, '.g')
-    plt.plot(x, y, 'r')
+    plt.plot(x, y, '.r')
 
-    plt.plot(new_x, new_y, 'b')
+    plt.plot(new_x, new_y, '.b')
     plt.show()
 
 
