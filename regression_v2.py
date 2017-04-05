@@ -9,16 +9,16 @@ import math
 
 # n - степень полинома
 def computing_F(x, n):
-    F = np.ones((x.size, n + 8))
+    F = np.ones((x.size, n + 6))
     for i in range(1, n + 1):
         F[:, i] = x ** i
     F[:,n+1]=np.cos(x)
     F[:,n+2]=np.sin(x)
-    F[:,n+3]=np.log(x+1)
-    F[:,n+4]=np.sqrt(x)
-    F[:,n+5]=np.exp(x)
-    F[:,n+6]=np.exp(-x)
-    F[:,n+7]=np.tan(x);
+    #F[:,n+3]=np.log(x+1)
+    F[:,n+3]=np.sqrt(x)
+    F[:,n+4]=np.exp(x)
+    F#[:,n+6]=np.exp(-x)
+    F[:,n+5]=np.tan(x);
     return F
 
 
@@ -98,7 +98,10 @@ def find_min_error(training_x, training_set, valid_x, valid_set, ns, lams=np.zer
 
 
 def error(x, y, w, lam, q=2):
-    return (1 / 2.) * np.sum((x - y) ** 2) + (lam / 2.) * np.sum(np.abs(w) ** q)
+    #решил разделить на сумму, т.к. нечестно не делить
+    #для training set ошибка получалась больше во столько раз,
+    #  сколько там элементов. можно лучше даже написать как среднеквадратическое отклонение
+    return ((1 / 2.) * np.sum((x - y) ** 2)/x.size + (lam / 2.) * np.sum(np.abs(w) ** q))
 
 
 def main():
@@ -121,7 +124,8 @@ def main():
     test_x = x[ar[int(0.8*data_count):data_count]]
     test_set = t[ar[int(0.8*data_count):data_count]]
 
-    lam = np.linspace(0, 100, 150)
+    lam = np.linspace(0, 1e-4, 100)
+
     w, l = find_min_error(training_x, training_set, valid_x, valid_set, 1000, lam)
 
     training_new_y = computing_new_y(w, training_x)
@@ -138,25 +142,13 @@ def main():
     plt.plot(training_x, training_set, '.g',label='training')
     plt.plot(valid_x, valid_set,'.y',label='valid')
     plt.plot(test_x, test_set, '.k',label='test')
-    plt.plot(x, y, '.r', label='real values')
+    #plt.plot(x, y, '.r', label='real values')
 
 
     plt.plot(new_x, new_y, '.b', label='our values')
     plt.legend()
     plt.show()
 
-
-
-    # на случай, если таких будет несколько
-    # for i in range(n.size):
-    #     F = computing_F(x, n[i])
-    #     w = computing_w(F, t, lams[i])
-    #     new_y = F.dot(w)
-
-    # plt.plot(np.arange(k), errors, 'g')
-
-    # plt.plot(x,new_y,color=(float(i)/n.size,0.,1. ))
-    # plt.show()
 
 
 if __name__ == "__main__":
