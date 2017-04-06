@@ -92,7 +92,7 @@ def find_min_error(training_x, training_set, valid_x, valid_set, ns, lams=np.zer
     plt.show()
     print 'good func=', good_finctions
     #print('n=', n)
-    print('lambda=', lam)
+    print('lambda=', good_lam)
     # print w
     return good_w, good_lam
 
