@@ -74,15 +74,11 @@ def main():
     print'Thresh=195', calcilate_parametrs(res4)
     alfs=[]
     betts=[]
-    for i in np.arange(180, 200, 0.05):
+    for i in np.arange(180, 201, 1):
         res=classifier_2(mens, i)
         par=calcilate_parametrs(res)
-        alfs.append( par['alfa'])
-        betts.append(1- par['betta'])
-    alfs=np.array(alfs)
-    betts=np.array(betts)
-    plt.figure()
-    plt.plot(alfs, betts, '.b')
-    plt.show()
+        print 'Thresh=',i
+        print par
+        print
 if __name__=="__main__":
     main()
