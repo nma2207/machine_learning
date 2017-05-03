@@ -4,10 +4,17 @@ import numpy.linalg as nalg
 import matplotlib.pyplot as plt
 import  math
 
+#
+#определим некоторые важные константы
+#
 BASIC_FUNC_COUNT=5
-EPS=1
-EPS0=1
+EPS=1e-2
+EPS0=1e-1
 
+
+#
+#Параметры для оценки классификатора
+#
 def calcilate_parametrs(result, real_value):
     tp=0
     tn=0
@@ -22,20 +29,8 @@ def calcilate_parametrs(result, real_value):
             fp+=1
         elif (result[i]>0.5 and real_value[i]==1):
             tp+=1
-    # for i in range(len(result)//2):
-    #     #True Negative
-    #     if result[i]==0:
-    #         tn+=1
-    #     #Fasle Negative
-    #     else:
-    #         fn+=1
-    # for i in range(len(result)//2, len(result)):
-    #     if(result[i]==1):
-    #         tp+=1
-    #     else:
-    #         fp+=1
-    #precision=float(tp)/(tp+fp)
-    #recal=float(tp)/(tp+fn)
+    precision=float(tp)/(tp+fp)
+    recal=float(tp)/(tp+fn)
     params={
             'TP':  tp,
             'TN':tn,
@@ -43,29 +38,27 @@ def calcilate_parametrs(result, real_value):
             'FN':fn,
             #'alfa': float(fp)/(tn+fp),
             #'betta':float(fn)/(tp+fn),
-            'accuracy': float(tp+tn)/result.size
-            #'precision':precision,
-            #'recal':recal,
-            #'f(1-score)':2.*(precision*recal)/(precision+recal)}
+            'accuracy': float(tp+tn)/result.size,
+            'precision':precision,
+            'recal':recal,
+            'f(1-score)':2.*(precision*recal)/(precision+recal)
     }
     return params
 
-
+#
+#Для получения массивов данных по ключу
+#
 def get_by_key(data, key):
     result=[]
     for i in data:
         result.append(i[key])
     return np.array(result)
+
+#
+#Наши базисные функции
+#
 def calc_F(x, y):
-    #x=get_by_key(data, 'x')
-    #y=get_by_key(data, 'y')
-    # F = np.ones((x.size, 6))
-    # F[:1]=x
-    # F[:2]=x*y
-    # F[:3]=x*y*y
-    # F[:4]=np.sin(x)*np.cos(x)
-    # F[:5]=y
-    return np.array([x,y, 0.1, x*y/100, math.sin(x)*math.cos(y)])
+    return np.array([x,y, 0.1, x*y, x+y])
 
 def calc_y1(x):
     return 20 * np.sin(2 * np.pi * 3 * x) + 100 * np.exp(x)
@@ -98,20 +91,24 @@ def calc_t2(x):
     return np.array(data)
     #return data
 
+
+#
+#то что мы хотим минимизировать
+#
 def calc_E(t,x,y, w, lam):
-    #result=0
-    #for i in range (t.size):
-    print t[:10]
     sigm=sigmoid_narr(x,y,w)
-    print sigm[:10]
+    #print sigm[:10]
     sigm=np.array(sigm)
     result=np.sum(t*np.log(sigm))
     result+=np.sum((1-t)*(1-np.log(sigm)))
-    print 'e',result
+    #print 'e',result
     result*=-1
     result+=lam/2*(np.sum(w*w))
     return result
 
+#
+#Градиент того, что мы хотим минимизоровать
+#
 def calc_gradient_E(t, x, y,w,lam):
     result=0.0
     for i in range(x.size):
@@ -120,52 +117,71 @@ def calc_gradient_E(t, x, y,w,lam):
     return result
 
 
-
+#
+#Градиентный спуск
+#
 def gradient_distent(data, gamma, lam):
     w=np.ones((BASIC_FUNC_COUNT))
     w_prev=np.copy(w)
+    errors=[]
+    w_arr=[]
     while(True):
         w_prev = np.copy(w)
-        w=w_prev-gamma*calc_gradient_E(get_by_key(data, 'c'),
+        grad=calc_gradient_E(get_by_key(data, 'c'),
                                        get_by_key(data, 'x'),
                                        get_by_key(data, 'y'),
                                        w, lam)
-        #print 'error=',np.sum((w - w_prev) ** 2),EPS*(np.sum(w**2)+EPS0)
+
+        w=w_prev-gamma*grad
+        err=calc_E(get_by_key(data, 'c'),
+                   get_by_key(data, 'x'),
+                   get_by_key(data, 'y'),
+                   w, lam)
+        print nalg.norm(w-w_prev),'<?',EPS*(nalg.norm(w)+EPS0)
+        errors.append(err)
         if(nalg.norm(w-w_prev)<EPS*(nalg.norm(w)+EPS0)):
             break
+    errors=np.array(errors)
+    print errors.size
+    print type(np.arange(errors.size))
+    plt.figure()
+    plt.plot(np.arange(errors.size), errors, '.')
+    plt.show()
     return w
 
+#
+#в поисках лучшего
+#
 def find_best_w(train_data, valid_data):
-    lams=np.linspace(1e-6,1,10)
-    gamma=0.5
+    lams=np.linspace(0,1e-6,10)
+    gamma=0.01
     best_w=np.zeros(BASIC_FUNC_COUNT)
-    min_error=-1
+    errors=[]
+    w_arr=[]
     for lam in lams:
         w=gradient_distent(train_data, gamma, lam)
         error=calc_E(get_by_key(valid_data, 'c'),
                      get_by_key(valid_data, 'x'),
                      get_by_key(valid_data, 'y'),
                      w, lam)
-        print 'err =',error
-        if min_error==-1 or error<min_error:
-            min_error=error
-            print 'min_err',min_error
-            best_w=w
-        #print w
-    return best_w
-
+        errors.append(error)
+        w_arr.append(w)
+    errors=np.array(errors)
+    min_i=np.where(errors==np.min(errors))
+    min_i=min_i[0][0]
+    print min_i
+    print errors
+    print lam
+    return w_arr[min_i]
 
 
 def sigmoid(x,y, w):
-    #w=np.array(w)
-    #print w
-    #print calc_F(x, y)
-    #print 'su=',np.sum(w*(calc_F(x, y)))
-    print 'w-',w
-    print 'f=',calc_F(x,y),-np.sum(w*(calc_F(x, y)))
     result=1./(1+math.exp(-np.sum(w*(calc_F(x, y)))))
     return result
 
+#
+#Когда нам нужны сигмоиды для кучи данных
+#
 def sigmoid_narr(x,y,w):
     sigm=[]
     for i in range(x.size):
@@ -181,6 +197,9 @@ def main():
     ar=np.arange(data_count)
     np.random.shuffle(ar)
 
+    #
+    #Тут очень хитро генерируем данные
+    #
     train_data=calc_t1(x[:(int(0.6*data_count))])
     train_data[:int(0.3*data_count)]=calc_t1(x[ar[:int(0.3*data_count)]])
     train_data[int(0.3 * data_count):int(0.6 * data_count)] = calc_t2(x[ar[int(0.3 * data_count):int(0.6 * data_count)]])
@@ -203,10 +222,10 @@ def main():
     result=sigmoid_narr(get_by_key(test_data, 'x'),
                         get_by_key(test_data, 'y'),
                         w)
-    print result
+   # print result
     params=calcilate_parametrs(result, get_by_key(test_data, 'c'))
     print params
-    print get_by_key(test_data, 'c')
+    #print get_by_key(test_data, 'c')
     plt.figure()
     plt.plot(get_by_key(train_data,'x'), get_by_key(train_data, 'y'),'.g')
     plt.show()
