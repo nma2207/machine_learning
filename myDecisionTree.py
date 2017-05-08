@@ -2,7 +2,10 @@
 
 import numpy as np
 import math
-
+from sklearn import datasets as dSet
+from sklearn import  metrics as sk_metrics
+import matplotlib.pyplot as plt
+import  time
 MIN_ENTROPY=1e-2
 
 class Node:
@@ -187,15 +190,31 @@ def calc_accuracy(tree, data, real_t, k):
 def main():
     tree=BynaryDecisionTree()
     #Пример с лекции Евгения Викторовича с собакой, кошкой и уткой
-    data=np.array([[0,4,1],
-                   [0,4,0],
-                   [0,2,0],
-                   [1,2,0]])
-    t=np.array([0,1,2,3])
-    tree.fit(data,t)
+    # data=np.array([[0,4,1],
+    #                [0,4,0],
+    #                [0,2,0],
+    #                [1,2,0]])
+    # t=np.array([0,1,2,3])
+    # tree.fit(data,t)
+    # print 'end'
+    # #tree.printTree()
+    # print calc_accuracy(tree, data, t, 4)
+    digits=dSet.load_digits()
+    imgs=digits.images[:1000]
+    target=digits.target[:1000]
+    data=digits.data[:1000]
+    start=time.time()
+    tree.fit(data, target)
+    end=time.time()
+    print start,end, end-start
     print 'end'
-    #tree.printTree()
-    print calc_accuracy(tree, data, t, 4)
+    exper=digits.data[1000:]
+    exp_t=digits.target[1000:]
+    t=tree.predict(exper)
+
+    print calc_accuracy(tree, exper, exp_t, 10)
+    t=calcClassByProbs(t)
+    print sk_metrics.accuracy_score(exp_t, t)
 
 if __name__=="__main__":
     main()
