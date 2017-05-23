@@ -13,6 +13,12 @@ class k_means_cluster:
     # list of centers
     # exit_criterion defoult - max_dist//n
     def __init__(self, k=0, exit_criterion='max_dist'):
+        """
+        k - кол-во кластеров
+        exit_criterion - критерий выхода
+            max_dist - если максимальный сдвиг центроида меншьше какой-то велиичны, то останавливаемся
+            n - n итераций
+        """
         self.k = k
         self.list_of_centers = []
         self.exit_criterion=exit_criterion
